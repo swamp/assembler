@@ -1,0 +1,4 @@
+github.com/swamp/disassembler v0.0.0-20210104195128-3b679a9bd815 h1:CpGkZlYDl5Qx/LkiuO2lt7cgqdWFDOSgvV/+IuSBA2k=
+github.com/swamp/disassembler v0.0.0-20210104195128-3b679a9bd815/go.mod h1:PVIZ1PKc0LvN5+wL/TrJj89obcUiU6OkEfvFudu20pE=
+github.com/swamp/opcodes v0.0.0-20210104104809-e35ed77cf8e2 h1:+PX6RzaPI7Hp4sRdwSzIJb9i7ghMCJb1FdM4+wfdJ70=
+github.com/swamp/opcodes v0.0.0-20210104104809-e35ed77cf8e2/go.mod h1:DCUPUv3e90C9rwpMcgYASQwtprvSwzusvbnTk4IfDU4=
