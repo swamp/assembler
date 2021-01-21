@@ -17,6 +17,7 @@ const (
 	ConstantTypeString ConstantType = iota
 	ConstantTypeBoolean
 	ConstantTypeInteger
+	ConstantTypeResourceName
 	ConstantTypeFunction
 	ConstantTypeFunctionExternal
 )
@@ -57,6 +58,10 @@ func NewIntegerConstant(debugID int, i int32) *Constant {
 	return &Constant{VariableNode: VariableNode{someID: debugID}, constantType: ConstantTypeInteger, integer: i}
 }
 
+func NewResourceNameConstant(debugID int, str string) *Constant {
+	return &Constant{VariableNode: VariableNode{someID: debugID}, constantType: ConstantTypeResourceName, str: str}
+}
+
 func NewFunctionReferenceConstantWithDebug(debugID int, uniqueFullyQualifiedName string) *Constant {
 	return &Constant{VariableNode: VariableNode{someID: debugID}, constantType: ConstantTypeFunction, str: uniqueFullyQualifiedName}
 }
@@ -91,6 +96,8 @@ func (c *Constant) internalString() string {
 	switch c.constantType {
 	case ConstantTypeString:
 		return c.str
+	case ConstantTypeResourceName:
+		return "@"+c.str
 	case ConstantTypeBoolean:
 		if c.b {
 			return "True"

@@ -68,6 +68,21 @@ func (c *FunctionContextConstants) AllocateIntegerConstant(i int32) *Constant {
 	return newConstant
 }
 
+func (c *FunctionContextConstants) AllocateResourceNameConstant(name string) *Constant {
+	for _, constant := range c.constants {
+		if constant.constantType == ConstantTypeResourceName {
+			if constant.str == name {
+				return constant
+			}
+		}
+	}
+	c.someConstantIDCounter++
+	newConstant := NewResourceNameConstant(c.someConstantIDCounter, name)
+	c.constants = append(c.constants, newConstant)
+
+	return newConstant
+}
+
 func (c *FunctionContextConstants) AllocateBooleanConstant(t bool) *Constant {
 	for _, constant := range c.constants {
 		if constant.constantType == ConstantTypeBoolean {
