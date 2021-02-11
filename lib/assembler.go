@@ -117,6 +117,11 @@ func (c *Code) Case(target TargetVariable, test SourceVariable, consequences []*
 	c.addStatement(o)
 }
 
+func (c *Code) CasePatternMatching(target TargetVariable, test SourceVariable, consequences []*CaseConsequencePatternMatching, defaultConsequence *CaseConsequencePatternMatching) {
+	o := &CasePatternMatching{target: target, test: test, consequences: consequences, defaultConsequence: defaultConsequence}
+	c.addStatement(o)
+}
+
 func (c *Code) BranchFalse(condition SourceVariable, jump *Label) {
 	if jump == nil {
 		panic("swamp assembler: null jump")
