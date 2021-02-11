@@ -375,6 +375,8 @@ func handleStatement(cmd CodeCommand, opStream *swampopcode.Stream) {
 		writeJump(opStream, t)
 	case *Case:
 		writeCase(opStream, t)
+	case *CasePatternMatching:
+		writeCasePatternMatching(opStream, t)
 	case *Constructor:
 		writeConstructor(opStream, t)
 	case *UpdateStruct:
