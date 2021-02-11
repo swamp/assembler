@@ -234,6 +234,27 @@ func writeCase(stream *swampopcode.Stream, caseExpr *Case) {
 	stream.EnumCase(caseExpr.target.Register(), caseExpr.test.Register(), opLabels)
 }
 
+func writeCasePatternMatching(stream *swampopcode.Stream, caseExpr *CasePatternMatching) {
+	var opLabels []swampopcodeinst.CasePatternMatchingJump
+
+	for _, consequence := range caseExpr.consequences {
+		label := consequence.label.OpLabel()
+
+		caseJump := swampopcodeinst.NewCasePatternMatchingJump(consequence.LiteralVariable().Register(), label)
+		opLabels = append(opLabels, caseJump)
+	}
+
+	defaultCons := caseExpr.defaultConsequence
+
+	if caseExpr.defaultConsequence != nil {
+		label := defaultCons.label.OpLabel()
+		caseJump := swampopcodeinst.NewCasePatternMatchingJump(swampopcodetype.Register{}, label)
+		opLabels = append(opLabels, caseJump)
+	}
+
+	stream.CasePatternMatching(caseExpr.target.Register(), caseExpr.test.Register(), opLabels)
+}
+
 func writeConstructor(stream *swampopcode.Stream, constructor *Constructor) {
 	var registers []swampopcodetype.Register
 
