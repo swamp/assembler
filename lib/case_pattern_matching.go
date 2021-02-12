@@ -29,7 +29,6 @@ func (c *CaseConsequencePatternMatching) String() string {
 }
 
 type CasePatternMatching struct {
-	target             TargetVariable
 	test               SourceVariable
 	consequences       []*CaseConsequencePatternMatching
 	defaultConsequence *CaseConsequencePatternMatching

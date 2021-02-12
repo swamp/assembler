@@ -30,12 +30,11 @@ func (c *CaseConsequence) String() string {
 }
 
 type Case struct {
-	target             TargetVariable
 	test               SourceVariable
 	consequences       []*CaseConsequence
 	defaultConsequence *CaseConsequence
 }
 
 func (o *Case) String() string {
-	return fmt.Sprintf("[case  %v and then jump %v (%v)]", o.test, o.consequences, o.defaultConsequence)
+	return fmt.Sprintf("[case %v and then jump %v (%v)]", o.test, o.consequences, o.defaultConsequence)
 }

@@ -112,13 +112,13 @@ func (c *Code) UpdateStruct(target TargetVariable, structToCopy SourceVariable, 
 	c.addStatement(o)
 }
 
-func (c *Code) Case(target TargetVariable, test SourceVariable, consequences []*CaseConsequence, defaultConsequence *CaseConsequence) {
-	o := &Case{target: target, test: test, consequences: consequences, defaultConsequence: defaultConsequence}
+func (c *Code) Case(test SourceVariable, consequences []*CaseConsequence, defaultConsequence *CaseConsequence) {
+	o := &Case{test: test, consequences: consequences, defaultConsequence: defaultConsequence}
 	c.addStatement(o)
 }
 
-func (c *Code) CasePatternMatching(target TargetVariable, test SourceVariable, consequences []*CaseConsequencePatternMatching, defaultConsequence *CaseConsequencePatternMatching) {
-	o := &CasePatternMatching{target: target, test: test, consequences: consequences, defaultConsequence: defaultConsequence}
+func (c *Code) CasePatternMatching(test SourceVariable, consequences []*CaseConsequencePatternMatching, defaultConsequence *CaseConsequencePatternMatching) {
+	o := &CasePatternMatching{test: test, consequences: consequences, defaultConsequence: defaultConsequence}
 	c.addStatement(o)
 }
 
@@ -197,7 +197,7 @@ func writeListConj(stream *swampopcode.Stream, operator *ListConj) {
 }
 
 func writeBinaryOperator(stream *swampopcode.Stream, operator *BinaryOperator) {
-	stream.IntBinaryOperator(operator.target.Register(), operator.operator, operator.a.Register(), operator.b.Register())
+	stream.BinaryOperator(operator.target.Register(), operator.operator, operator.a.Register(), operator.b.Register())
 }
 
 func writeBranchFalse(stream *swampopcode.Stream, branch *BranchFalse) {
@@ -236,7 +236,7 @@ func writeCase(stream *swampopcode.Stream, caseExpr *Case) {
 		opLabels = append(opLabels, caseJump)
 	}
 
-	stream.EnumCase(caseExpr.target.Register(), caseExpr.test.Register(), opLabels)
+	stream.EnumCase(caseExpr.test.Register(), opLabels)
 }
 
 func writeCasePatternMatching(stream *swampopcode.Stream, caseExpr *CasePatternMatching) {
@@ -257,7 +257,7 @@ func writeCasePatternMatching(stream *swampopcode.Stream, caseExpr *CasePatternM
 		opLabels = append(opLabels, caseJump)
 	}
 
-	stream.CasePatternMatching(caseExpr.target.Register(), caseExpr.test.Register(), opLabels)
+	stream.CasePatternMatching(caseExpr.test.Register(), opLabels)
 }
 
 func writeConstructor(stream *swampopcode.Stream, constructor *Constructor) {
