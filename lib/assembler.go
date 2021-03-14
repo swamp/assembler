@@ -107,6 +107,11 @@ func (c *Code) Constructor(target TargetVariable, values []SourceVariable) {
 	c.addStatement(o)
 }
 
+func (c *Code) StructSplit(source SourceVariable, targets []TargetVariable) {
+	o := &StructSplit{source: source, targets: targets}
+	c.addStatement(o)
+}
+
 func (c *Code) UpdateStruct(target TargetVariable, structToCopy SourceVariable, updates []UpdateField) {
 	o := &UpdateStruct{target: target, structToCopy: structToCopy, updates: updates}
 	c.addStatement(o)
@@ -270,6 +275,16 @@ func writeConstructor(stream *swampopcode.Stream, constructor *Constructor) {
 	stream.CreateStruct(constructor.target.Register(), registers)
 }
 
+func writeStructSplit(stream *swampopcode.Stream, constructor *StructSplit) {
+	var targets []swampopcodetype.Register
+
+	for _, argument := range constructor.targets {
+		targets = append(targets, argument.Register())
+	}
+
+	stream.StructSplit(constructor.source.Register(), targets)
+}
+
 func writeUpdateStruct(stream *swampopcode.Stream, copyStruct *UpdateStruct) {
 	var copyFields []swampopcodeinst.CopyToFieldInfo
 
@@ -379,6 +394,8 @@ func handleStatement(cmd CodeCommand, opStream *swampopcode.Stream) {
 		writeCasePatternMatching(opStream, t)
 	case *Constructor:
 		writeConstructor(opStream, t)
+	case *StructSplit:
+		writeStructSplit(opStream, t)
 	case *UpdateStruct:
 		writeUpdateStruct(opStream, t)
 	case *ListLiteral:
