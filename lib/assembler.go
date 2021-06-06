@@ -180,8 +180,8 @@ func (c *Code) CreateEnum(target TargetVariable, enumFieldIndex int, arguments [
 	c.addStatement(o)
 }
 
-func (c *Code) Curry(target TargetVariable, function SourceVariable, arguments []SourceVariable) {
-	o := &Curry{target: target, function: function, arguments: arguments}
+func (c *Code) Curry(target TargetVariable, typeIDConstant uint16, function SourceVariable, arguments []SourceVariable) {
+	o := &Curry{target: target, typeIDConstant: typeIDConstant, function: function, arguments: arguments}
 	c.addStatement(o)
 }
 
@@ -344,7 +344,7 @@ func writeCurry(stream *swampopcode.Stream, call *Curry) {
 		arguments = append(arguments, argument.Register())
 	}
 
-	stream.Curry(call.target.Register(), call.function.Register(), arguments)
+	stream.Curry(call.target.Register(), call.typeIDConstant, call.function.Register(), arguments)
 }
 
 func writeEnum(stream *swampopcode.Stream, enumConstructor *Enum) {

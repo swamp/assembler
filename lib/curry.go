@@ -8,11 +8,12 @@ package assembler
 import "fmt"
 
 type Curry struct {
-	target    TargetVariable
-	function  SourceVariable
-	arguments []SourceVariable
+	target         TargetVariable
+	typeIDConstant uint16
+	function       SourceVariable
+	arguments      []SourceVariable
 }
 
 func (o *Curry) String() string {
-	return fmt.Sprintf("[curry %v <= %v (%v)]", o.target, o.function, o.arguments)
+	return fmt.Sprintf("[curry %v (%v) <= %v (%v)]", o.target, o.typeIDConstant, o.function, o.arguments)
 }

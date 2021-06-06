@@ -1,4 +1,4 @@
-github.com/swamp/disassembler v0.0.0-20210314091529-198eb20a8e00 h1:VD4bWgvhzNEvsLtCTHMrkKJcWl+bmWbN2Zjx1yP4BeY=
-github.com/swamp/disassembler v0.0.0-20210314091529-198eb20a8e00/go.mod h1:uQ0bkHtOlaTomqECttWjfV6LPkSuEoNeTVeMlCH90SU=
-github.com/swamp/opcodes v0.0.0-20210314090653-07b0e440d2ad h1:7cIC9Yrz8GAAZN17Em5lN3fIfU4ZosXqhYAxyRmHE54=
-github.com/swamp/opcodes v0.0.0-20210314090653-07b0e440d2ad/go.mod h1:DCUPUv3e90C9rwpMcgYASQwtprvSwzusvbnTk4IfDU4=
+github.com/swamp/disassembler v0.0.0-20210606130817-58b042135342 h1:wNH5J7iH09B885jjHUCmZiL/Wdsu7qVX4AmFQQ/DiDQ=
+github.com/swamp/disassembler v0.0.0-20210606130817-58b042135342/go.mod h1:WKuQxV7/KZ8YTtYde3KDZRkVlt1Lyxw+vJdz0bBfPaE=
+github.com/swamp/opcodes v0.0.0-20210606130226-06c2609148c3 h1:SJqGxK+q6A/eCDLkaUXo2FOvAuXicH1pptgdZjtvC2g=
+github.com/swamp/opcodes v0.0.0-20210606130226-06c2609148c3/go.mod h1:DCUPUv3e90C9rwpMcgYASQwtprvSwzusvbnTk4IfDU4=
