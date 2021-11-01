@@ -70,8 +70,8 @@ func (c *Code) StringAppend(target TargetStackPos, a SourceStackPos, b SourceSta
 	c.addStatement(o)
 }
 
-func (c *Code) ListConj(target TargetStackPos, item SourceStackPos, list SourceStackPos) {
-	o := &ListConj{target: target, item: item, list: list}
+func (c *Code) ListConj(target TargetStackPos, item SourceStackPos, itemSize StackItemSize, itemAlign opcode_sp_type.MemoryAlign, list SourceStackPos) {
+	o := &ListConj{target: target, item: item, debugItemSize: itemSize, debugItemAlign: itemAlign, list: list}
 	c.addStatement(o)
 }
 
@@ -256,6 +256,10 @@ func stackRange(size StackRange) opcode_sp_type.StackRange {
 	return opcode_sp_type.StackRange(size)
 }
 
+func stackRangeFromItemSize(size StackItemSize) opcode_sp_type.StackRange {
+	return opcode_sp_type.StackRange(size)
+}
+
 func sourceStackPositionRange(pos SourceStackPosRange) opcode_sp_type.SourceStackPositionRange {
 	return opcode_sp_type.SourceStackPositionRange{Position: sourceStackPosition(pos.Pos), Range: sourceStackRange(pos.Size)}
 }
@@ -273,7 +277,7 @@ func writeStringAppend(stream *opcode_sp.Stream, operator *StringAppend) {
 }
 
 func writeListConj(stream *opcode_sp.Stream, operator *ListConj) {
-	stream.ListConj(targetStackPosition(operator.target), sourceStackPosition(operator.list), sourceStackPosition(operator.item))
+	stream.ListConj(targetStackPosition(operator.target), sourceStackPosition(operator.list), sourceStackPosition(operator.item), stackRangeFromItemSize(operator.debugItemSize), operator.debugItemAlign)
 }
 
 func writeBinaryOperator(stream *opcode_sp.Stream, operator *BinaryOperator) {

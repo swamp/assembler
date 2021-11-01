@@ -7,15 +7,18 @@ package assembler_sp
 
 import (
 	"fmt"
+
+	opcode_sp_type "github.com/swamp/opcodes/type"
 )
 
 type ListConj struct {
-	target        TargetStackPos
-	item          SourceStackPos
-	list          SourceStackPos
-	debugItemSize StackItemSize
+	target         TargetStackPos
+	item           SourceStackPos
+	list           SourceStackPos
+	debugItemSize  StackItemSize
+	debugItemAlign opcode_sp_type.MemoryAlign
 }
 
 func (o *ListConj) String() string {
-	return fmt.Sprintf("[ListConj %v <= item:%v (%d) list:%v]", o.target, o.item, o.debugItemSize, o.list)
+	return fmt.Sprintf("[ListConj %v <= item:%v (%d, %d) list:%v]", o.target, o.item, o.debugItemSize, o.debugItemAlign, o.list)
 }
