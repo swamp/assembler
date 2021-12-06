@@ -90,6 +90,11 @@ func (c *Code) EnumBinaryOperator(target TargetStackPos, a SourceStackPos, b Sou
 	c.addStatement(o)
 }
 
+func (c *Code) BooleanBinaryOperator(target TargetStackPos, a SourceStackPos, b SourceStackPos, operator instruction_sp.BinaryOperatorType) {
+	o := &BooleanBinaryOperator{target: target, a: a, b: b, operator: operator}
+	c.addStatement(o)
+}
+
 func (c *Code) UnaryOperator(target TargetStackPos, a SourceStackPos, operator instruction_sp.UnaryOperatorType) {
 	o := &UnaryOperator{target: target, a: a, operator: operator}
 	c.addStatement(o)
@@ -294,6 +299,10 @@ func writeStringBinaryOperator(stream *opcode_sp.Stream, operator *StringBinaryO
 
 func writeEnumBinaryOperator(stream *opcode_sp.Stream, operator *EnumBinaryOperator) {
 	stream.EnumBinaryOperator(targetStackPosition(operator.target), operator.operator, sourceStackPosition(operator.a), sourceStackPosition(operator.b))
+}
+
+func writeBooleanBinaryOperator(stream *opcode_sp.Stream, operator *BooleanBinaryOperator) {
+	stream.BooleanBinaryOperator(targetStackPosition(operator.target), operator.operator, sourceStackPosition(operator.a), sourceStackPosition(operator.b))
 }
 
 func writeCopyMemory(stream *opcode_sp.Stream, operator *CopyMemory) {
