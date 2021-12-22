@@ -2,9 +2,11 @@ package assembler_sp
 
 import (
 	"fmt"
+	"github.com/swamp/opcodes/opcode_sp"
 )
 
 type LoadInteger struct {
+	position opcode_sp.FilePosition
 	target   TargetStackPos
 	intValue int32
 }

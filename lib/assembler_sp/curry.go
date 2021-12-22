@@ -5,9 +5,13 @@
 
 package assembler_sp
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/swamp/opcodes/opcode_sp"
+)
 
 type Curry struct {
+	position opcode_sp.FilePosition
 	target              TargetStackPos
 	typeIDConstant      uint16
 	firstParameterAlign MemoryAlign

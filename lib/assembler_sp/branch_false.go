@@ -5,9 +5,13 @@
 
 package assembler_sp
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/swamp/opcodes/opcode_sp"
+)
 
 type BranchFalse struct {
+	position opcode_sp.FilePosition
 	condition SourceStackPos
 	jump      *Label
 }
@@ -25,6 +29,7 @@ func (o *BranchFalse) Jump() *Label {
 }
 
 type BranchTrue struct {
+	position opcode_sp.FilePosition
 	condition SourceStackPos
 	jump      *Label
 }

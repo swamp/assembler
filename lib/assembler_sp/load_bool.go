@@ -2,9 +2,11 @@ package assembler_sp
 
 import (
 	"fmt"
+	"github.com/swamp/opcodes/opcode_sp"
 )
 
 type LoadBool struct {
+	position opcode_sp.FilePosition
 	target  TargetStackPos
 	boolean bool
 }

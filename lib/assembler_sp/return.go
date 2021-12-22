@@ -5,12 +5,16 @@
 
 package assembler_sp
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/swamp/opcodes/opcode_sp"
+)
 
 type Return struct {
-	stackPointerAdd uint32
+	position opcode_sp.FilePosition
+	//stackPointerAdd uint32
 }
 
 func (o *Return) String() string {
-	return fmt.Sprintf("[ret %d]", o.stackPointerAdd)
+	return fmt.Sprintf("[ret]")
 }

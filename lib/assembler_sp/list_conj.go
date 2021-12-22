@@ -9,9 +9,11 @@ import (
 	"fmt"
 
 	opcode_sp_type "github.com/swamp/opcodes/type"
+	"github.com/swamp/opcodes/opcode_sp"
 )
 
 type ListConj struct {
+	position opcode_sp.FilePosition
 	target         TargetStackPos
 	item           SourceStackPos
 	list           SourceStackPos

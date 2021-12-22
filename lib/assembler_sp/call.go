@@ -5,9 +5,13 @@
 
 package assembler_sp
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/swamp/opcodes/opcode_sp"
+)
 
 type Call struct {
+	position opcode_sp.FilePosition
 	function       SourceStackPos
 	newBasePointer TargetStackPos
 }

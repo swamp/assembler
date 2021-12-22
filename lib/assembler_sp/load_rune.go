@@ -4,9 +4,11 @@ import (
 	"fmt"
 
 	"github.com/swamp/opcodes/instruction_sp"
+	"github.com/swamp/opcodes/opcode_sp"
 )
 
 type LoadRune struct {
+	position opcode_sp.FilePosition
 	target TargetStackPos
 	rune   instruction_sp.ShortRune
 }

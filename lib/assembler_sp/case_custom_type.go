@@ -5,9 +5,13 @@
 
 package assembler_sp
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/swamp/opcodes/opcode_sp"
+)
 
 type CaseConsequence struct {
+	position opcode_sp.FilePosition
 	caseValue uint8
 	label     *Label
 }
@@ -29,6 +33,7 @@ func (c *CaseConsequence) String() string {
 }
 
 type Case struct {
+	position opcode_sp.FilePosition
 	test               SourceStackPos
 	consequences       []*CaseConsequence
 	defaultConsequence *CaseConsequence

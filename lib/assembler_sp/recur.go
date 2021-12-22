@@ -5,9 +5,14 @@
 
 package assembler_sp
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/swamp/opcodes/opcode_sp"
+)
 
-type Recur struct{}
+type Recur struct {
+	position opcode_sp.FilePosition
+}
 
 func (o *Recur) String() string {
 	return fmt.Sprintf("[rcall]")

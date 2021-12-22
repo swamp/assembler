@@ -9,9 +9,11 @@ import (
 	"fmt"
 
 	"github.com/swamp/opcodes/instruction_sp"
+	"github.com/swamp/opcodes/opcode_sp"
 )
 
 type EnumBinaryOperator struct {
+	position opcode_sp.FilePosition
 	target   TargetStackPos
 	a        SourceStackPos
 	b        SourceStackPos

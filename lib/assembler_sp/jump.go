@@ -5,9 +5,13 @@
 
 package assembler_sp
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/swamp/opcodes/opcode_sp"
+)
 
 type Jump struct {
+	position opcode_sp.FilePosition
 	jump *Label
 }
 
