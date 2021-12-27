@@ -60,13 +60,27 @@ func (m *DynamicMemoryMapper) Read(pos SourceDynamicMemoryPosRange) []byte {
 func (m *DynamicMemoryMapper) Write(data []byte, debugString string) SourceDynamicMemoryPosRange {
 	posRange := m.Allocate(uint(len(data)), 1, debugString)
 	position := posRange.Position
+
+	m.add(position, data)
+
+	return posRange
+}
+
+func (m *DynamicMemoryMapper) WriteAlign(data []byte, align uint32, debugString string) SourceDynamicMemoryPosRange {
+	posRange := m.Allocate(uint(len(data)), align, debugString)
+	position := posRange.Position
+
+	m.add(position, data)
+
+	return posRange
+}
+
+func (m *DynamicMemoryMapper) add(position SourceDynamicMemoryPos, data []byte) {
 	endPos := uint32(position) + uint32(len(data))
 	if endPos > m.maxIndexWritten {
 		m.maxIndexWritten = endPos - 1
 	}
 	copy(m.memory[position:endPos], data)
-
-	return posRange
 }
 
 func (m *DynamicMemoryMapper) Overwrite(position SourceDynamicMemoryPos, data []byte, debugString string) error {

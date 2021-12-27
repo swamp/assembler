@@ -53,7 +53,7 @@ func (c *PackageConstants) Finalize() {
 	var resourceNameChunkOctets [16]byte
 	binary.LittleEndian.PutUint64(resourceNameChunkOctets[0:8], uint64(pointerArea.Position))
 	binary.LittleEndian.PutUint64(resourceNameChunkOctets[8:16], uint64(len(c.resourceNames)))
-	resourceNameChunkPointer := c.dynamicMapper.Write(resourceNameChunkOctets[:], "ResourceNameChunk struct (character-pointer-pointer, resourceNameCount)")
+	resourceNameChunkPointer := c.dynamicMapper.WriteAlign(resourceNameChunkOctets[:], 8,"ResourceNameChunk struct (character-pointer-pointer, resourceNameCount)")
 
 	c.constants = append(c.constants, &Constant{
 		constantType:   ConstantTypeResourceNameChunk,
@@ -118,8 +118,10 @@ func (c *PackageConstants) AllocateResourceNameConstant(s string) *Constant {
 }
 
 const (
-	SizeofSwampFunc         = 9 * 8
+	SizeofSwampFunc         = 11 * 8
 	SizeofSwampExternalFunc = 18 * 8
+	SizeofSwampDebugInfoLines = 2 * 8
+	SizeofSwampDebugInfoFiles = 2 * 8
 )
 
 func (c *PackageConstants) AllocateFunctionStruct(uniqueFullyQualifiedFunctionName string,
@@ -142,7 +144,10 @@ func (c *PackageConstants) AllocateFunctionStruct(uniqueFullyQualifiedFunctionNa
 	binary.LittleEndian.PutUint64(swampFuncStruct[56:64], uint64(fullyQualifiedStringPointer.Position)) // debugName
 	binary.LittleEndian.PutUint64(swampFuncStruct[64:72], uint64(typeIndex))                            // typeIndex
 
-	funcPointer := c.dynamicMapper.Write(swampFuncStruct[:], "function Struct for:"+uniqueFullyQualifiedFunctionName)
+	binary.LittleEndian.PutUint64(swampFuncStruct[72:80], uint64(opcodesPointer.Position))
+	binary.LittleEndian.PutUint64(swampFuncStruct[80:88], uint64(opcodesPointer.Size))
+
+	funcPointer := c.dynamicMapper.WriteAlign(swampFuncStruct[:], 8, "function Struct for:"+uniqueFullyQualifiedFunctionName)
 
 	newConstant := NewFunctionReferenceConstantWithDebug("fn", uniqueFullyQualifiedFunctionName, funcPointer)
 	c.constants = append(c.constants, newConstant)
@@ -175,7 +180,7 @@ func (c *PackageConstants) AllocateExternalFunctionStruct(uniqueFullyQualifiedFu
 
 	binary.LittleEndian.PutUint64(swampFuncStruct[120:128], uint64(fullyQualifiedStringPointer.Position)) // debugName
 
-	funcPointer := c.dynamicMapper.Write(swampFuncStruct[:], fmt.Sprintf("external function Struct for: '%s' param Count: %d", uniqueFullyQualifiedFunctionName, len(parameters)))
+	funcPointer := c.dynamicMapper.WriteAlign(swampFuncStruct[:], 8, fmt.Sprintf("external function Struct for: '%s' param Count: %d", uniqueFullyQualifiedFunctionName, len(parameters)))
 
 	newConstant := NewExternalFunctionReferenceConstantWithDebug("fn", uniqueFullyQualifiedFunctionName, funcPointer)
 	c.constants = append(c.constants, newConstant)
@@ -184,7 +189,65 @@ func (c *PackageConstants) AllocateExternalFunctionStruct(uniqueFullyQualifiedFu
 	return newConstant, nil
 }
 
+func (c *PackageConstants) allocateDebugLinesStruct(count uint, debugLineOctets []byte, uniqueFullyQualifiedFunctionName string) SourceDynamicMemoryPosRange {
+	var swampFuncStruct [SizeofSwampDebugInfoLines]byte
+
+	debugLinesLinesPointer := c.dynamicMapper.WriteAlign(debugLineOctets, 2,"debug lines lines")
+
+	binary.LittleEndian.PutUint32(swampFuncStruct[0:4], uint32(count))
+	binary.LittleEndian.PutUint64(swampFuncStruct[8:16], uint64(debugLinesLinesPointer.Position))
+
+	pointerToDebugLines := c.dynamicMapper.WriteAlign(swampFuncStruct[:], 4, "debug lines lines:"+uniqueFullyQualifiedFunctionName)
+
+	return pointerToDebugLines
+}
+
+func (c *PackageConstants) AllocateDebugInfoFiles(fileUrls []*FileUrl) (*Constant, error) {
+	var debugInfoFilesStruct [SizeofSwampDebugInfoFiles]byte
+
+	stringPointers := make([]SourceDynamicMemoryPosRange, len(fileUrls))
+
+	for index, fileUrl := range fileUrls {
+		ptr := c.AllocateStringOctets(fileUrl.File)
+		stringPointers[index] = ptr
+	}
+
+	spaceForArrayWithPointers := make([]byte, 8 * len(stringPointers))
+	for index, stringPointer := range stringPointers {
+		binary.LittleEndian.PutUint64(spaceForArrayWithPointers[index*8: index*8+8], uint64(stringPointer.Position))
+	}
+	arrayStart := c.dynamicMapper.WriteAlign(spaceForArrayWithPointers, 8, "array with pointers")
+
+	binary.LittleEndian.PutUint32(debugInfoFilesStruct[0:4], uint32(len(fileUrls)))
+	binary.LittleEndian.PutUint64(debugInfoFilesStruct[8:8+8], uint64(arrayStart.Position))
+
+	debugInfoFilesPtr := c.dynamicMapper.WriteAlign(debugInfoFilesStruct[:], 8,"debug info files")
+
+	newConstant := NewDebugInfoFilesWithDebug("debug info files", debugInfoFilesPtr)
+
+	c.constants = append(c.constants, newConstant)
+
+	return newConstant, nil
+}
+
+/*
+func (c *PackageConstants) AllocateDebugInfoLines(instructions []*opcode_sp.Instruction) (*Constant, error) {
+	var swampFuncStruct [SizeofSwampDebugInfoLines]byte
+
+	binary.LittleEndian.PutUint32(swampFuncStruct[0:4], uint32(0))
+
+	funcPointer := c.dynamicMapper.Write(swampFuncStruct[:], "function Struct for:")
+
+	newConstant := NewFunctionReferenceConstantWithDebug("fn", "uniqueFullyQualifiedFunctionName", funcPointer)
+	c.constants = append(c.constants, newConstant)
+
+	return newConstant, nil
+}
+*/
+
+
 const SwampFuncOpcodeOffset = 24
+const SwampFuncDebugLinesOffset = 72
 
 func (c *PackageConstants) FetchOpcodes(functionConstant *Constant) []byte {
 	readSection := SourceDynamicMemoryPosRange{
@@ -230,6 +293,21 @@ func (c *PackageConstants) DefineFunctionOpcodes(funcConstant *Constant, opcodes
 	binary.LittleEndian.PutUint64(opcodePointerOctets[8:16], uint64(opcodesPointer.Size))
 
 	c.dynamicMapper.Overwrite(overwritePointer, opcodePointerOctets[:], "opcodepointer"+funcConstant.str)
+
+	return nil
+}
+
+func (c *PackageConstants) DefineFunctionDebugLines(funcConstant *Constant, count uint, debugInfoOctets []byte) error {
+	overwritePointer := SourceDynamicMemoryPos(uint(funcConstant.PosRange().Position) + SwampFuncDebugLinesOffset)
+
+	var debugLineOctets [16]byte
+
+	debugLinesStructPointer := c.allocateDebugLinesStruct(count, debugInfoOctets, funcConstant.FunctionReferenceFullyQualifiedName())
+
+	binary.LittleEndian.PutUint64(debugLineOctets[0:8], uint64(debugLinesStructPointer.Position))
+	binary.LittleEndian.PutUint64(debugLineOctets[8:16], uint64(debugLinesStructPointer.Size))
+
+	c.dynamicMapper.Overwrite(overwritePointer, debugLineOctets[:], "debugInfoOctets"+funcConstant.str)
 
 	return nil
 }

@@ -492,7 +492,7 @@ func handleStatement(cmd CodeCommand, opStream *opcode_sp.Stream) {
 	}
 }
 
-func (c *Code) Resolve(verboseFlag bool) ([]byte, error) {
+func (c *Code) Resolve(verboseFlag bool) ([]byte, []opcode_sp.OpcodeInfo, error) {
 	if verboseFlag {
 		// context.ShowSummary()
 	}
@@ -508,7 +508,7 @@ func (c *Code) Resolve(verboseFlag bool) ([]byte, error) {
 		handleStatement(cmd, opStream)
 	}
 
-	octets, err := opStream.Serialize()
+	octets, opcodeInfos, err := opStream.Serialize()
 
 	if verboseFlag {
 		fmt.Println("--- disassembly ---")
@@ -519,5 +519,5 @@ func (c *Code) Resolve(verboseFlag bool) ([]byte, error) {
 		}
 	}
 
-	return octets, err
+	return octets, opcodeInfos, err
 }

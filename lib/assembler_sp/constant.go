@@ -18,6 +18,7 @@ const (
 	ConstantTypeFunction
 	ConstantTypeFunctionExternal
 	ConstantTypeResourceNameChunk
+	ConstantTypeDebugInfoFiles
 )
 
 type Constant struct {
@@ -64,6 +65,12 @@ func NewExternalFunctionReferenceConstantWithDebug(debugString string, uniqueFul
 	return &Constant{constantType: ConstantTypeFunctionExternal, str: uniqueFullyQualifiedName, source: source, debugString: debugString}
 }
 
+
+func NewDebugInfoFilesWithDebug(debugString string, source SourceDynamicMemoryPosRange) *Constant {
+	return &Constant{constantType: ConstantTypeDebugInfoFiles, source: source, debugString: debugString}
+}
+
+
 func (c *Constant) internalString() string {
 	switch c.constantType {
 	case ConstantTypeString:
@@ -74,6 +81,8 @@ func (c *Constant) internalString() string {
 		return "func:" + c.str
 	case ConstantTypeFunctionExternal:
 		return "funcExternal:" + c.str
+	case ConstantTypeDebugInfoFiles:
+		return "debugInfoFiles" + c.str
 	}
 
 	panic("swamp assembler: unknown constant")
