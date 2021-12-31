@@ -105,6 +105,8 @@ type DynamicMemoryPos uint32
 
 type SourceDynamicMemoryPos uint32
 
+const SourceDynamicMemoryPosNull SourceDynamicMemoryPos = 0xffffffff
+
 func (t SourceDynamicMemoryPos) String() string {
 	return fmt.Sprintf("DynPos %04X", uint32(t))
 }
@@ -119,3 +121,5 @@ type SourceDynamicMemoryPosRange struct {
 func (t SourceDynamicMemoryPosRange) String() string {
 	return fmt.Sprintf("%v:%v", t.Position, t.Size)
 }
+
+

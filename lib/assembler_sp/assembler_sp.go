@@ -60,6 +60,22 @@ func (c *Code) Label(identifier VariableName, debugString string) *Label {
 	return o
 }
 
+func (c *Code) VariableStart(name VariableName, posRange SourceStackPosRange) *VariableImpl {
+	o := &VariableImpl{identifier: name, VariableNode: VariableNode{debugString: ""}}
+//	c.labels = append(c.labels, o)
+	c.addStatement(o)
+
+	return o
+}
+
+func (c *Code) VariableEnd(refer *VariableImpl) *VariableEnd {
+	o := &VariableEnd{refer:refer}
+	//	c.labels = append(c.labels, o)
+	c.addStatement(o)
+
+	return o
+}
+
 func (c *Code) ListAppend(target TargetStackPos, a SourceStackPos, b SourceStackPos, position opcode_sp.FilePosition) {
 	o := &ListAppend{target: target, a: a, b: b, position: position}
 	c.addStatement(o)
@@ -429,6 +445,10 @@ func writeReturn(stream *opcode_sp.Stream, ret *Return) {
 
 func handleStatement(cmd CodeCommand, opStream *opcode_sp.Stream) {
 	switch t := cmd.(type) {
+	case *Label:
+		opStream.Label(t.OpLabel())
+	case *VariableImpl:
+	case *VariableEnd:
 	case *BinaryOperator:
 		writeBinaryOperator(opStream, t)
 	case *UnaryOperator:
@@ -461,8 +481,6 @@ func handleStatement(cmd CodeCommand, opStream *opcode_sp.Stream) {
 		writeStringAppend(opStream, t)
 	case *Return:
 		writeReturn(opStream, t)
-	case *Label:
-		opStream.Label(t.OpLabel())
 	case *Call:
 		writeCall(opStream, t)
 	case *Recur:

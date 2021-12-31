@@ -15,9 +15,9 @@ type Context struct {
 	constants      *PackageConstants
 }
 
-func (c *Context) MakeScopeContext() *Context {
+func (c *Context) MakeScopeContext(debugString string) *Context {
 	newContext := &Context{
-		scopeVariables: NewFunctionVariables(),
+		scopeVariables: NewFunctionVariables(debugString),
 		constants:      c.constants,
 	}
 	return newContext

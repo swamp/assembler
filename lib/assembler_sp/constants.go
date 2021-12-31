@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/swamp/opcodes/opcode_sp"
 	opcode_sp_type "github.com/swamp/opcodes/type"
 )
 
@@ -21,7 +22,7 @@ type PackageConstants struct {
 
 func NewPackageConstants() *PackageConstants {
 	return &PackageConstants{
-		dynamicMapper: DynamicMemoryMapperNew(128 * 1024),
+		dynamicMapper: DynamicMemoryMapperNew(256 * 1024),
 	}
 }
 
@@ -68,10 +69,10 @@ func (c *PackageConstants) DynamicMemory() *DynamicMemoryMapper {
 	return c.dynamicMapper
 }
 
-func (c *PackageConstants) AllocateStringOctets(s string) SourceDynamicMemoryPosRange {
+func AllocateStringOctets(memoryMapper *DynamicMemoryMapper,s string) SourceDynamicMemoryPosRange {
 	stringOctets := []byte(s)
 	stringOctets = append(stringOctets, byte(0))
-	stringOctetsPointer := c.dynamicMapper.Write(stringOctets, "string:"+s)
+	stringOctetsPointer := memoryMapper.Write(stringOctets, "string:"+s)
 
 	return stringOctetsPointer
 }
@@ -85,7 +86,7 @@ func (c *PackageConstants) AllocateStringConstant(s string) *Constant {
 		}
 	}
 
-	stringOctetsPointer := c.AllocateStringOctets(s)
+	stringOctetsPointer := AllocateStringOctets(c.dynamicMapper, s)
 
 	var swampStringOctets [SizeofSwampString]byte
 	binary.LittleEndian.PutUint64(swampStringOctets[0:8], uint64(stringOctetsPointer.Position))
@@ -107,7 +108,7 @@ func (c *PackageConstants) AllocateResourceNameConstant(s string) *Constant {
 		}
 	}
 
-	stringOctetsPointer := c.AllocateStringOctets(s)
+	stringOctetsPointer := AllocateStringOctets(c.dynamicMapper, s)
 
 	newConstant := NewResourceNameConstant(c.someConstantIDCounter, s, stringOctetsPointer)
 	c.someConstantIDCounter++
@@ -118,10 +119,13 @@ func (c *PackageConstants) AllocateResourceNameConstant(s string) *Constant {
 }
 
 const (
-	SizeofSwampFunc         = 11 * 8
+	SizeofSwampFunc         = 13 * 8
 	SizeofSwampExternalFunc = 18 * 8
 	SizeofSwampDebugInfoLines = 2 * 8
 	SizeofSwampDebugInfoFiles = 2 * 8
+	SizeofSwampDebugInfoScopes = 2 * 8
+	SizeofSwampDebugInfoScopesEntry = 4 * 2 + 8
+	AlignOfSwampDebugInfoScopesEntry = 8
 )
 
 func (c *PackageConstants) AllocateFunctionStruct(uniqueFullyQualifiedFunctionName string,
@@ -129,7 +133,7 @@ func (c *PackageConstants) AllocateFunctionStruct(uniqueFullyQualifiedFunctionNa
 	returnAlignSize opcode_sp_type.MemoryAlign, parameterCount uint, parameterOctetSize opcode_sp_type.MemorySize, typeIndex uint) (*Constant, error) {
 	var swampFuncStruct [SizeofSwampFunc]byte
 
-	fullyQualifiedStringPointer := c.AllocateStringOctets(uniqueFullyQualifiedFunctionName)
+	fullyQualifiedStringPointer := AllocateStringOctets(c.dynamicMapper, uniqueFullyQualifiedFunctionName)
 
 	binary.LittleEndian.PutUint32(swampFuncStruct[0:4], uint32(0))
 	binary.LittleEndian.PutUint64(swampFuncStruct[8:16], uint64(parameterCount))      // parameterCount
@@ -159,7 +163,7 @@ func (c *PackageConstants) AllocateFunctionStruct(uniqueFullyQualifiedFunctionNa
 func (c *PackageConstants) AllocateExternalFunctionStruct(uniqueFullyQualifiedFunctionName string, returnValue SourceStackPosRange, parameters []SourceStackPosRange) (*Constant, error) {
 	var swampFuncStruct [SizeofSwampExternalFunc]byte
 
-	fullyQualifiedStringPointer := c.AllocateStringOctets(uniqueFullyQualifiedFunctionName)
+	fullyQualifiedStringPointer := AllocateStringOctets(c.dynamicMapper, uniqueFullyQualifiedFunctionName)
 	if len(parameters) == 0 {
 		// panic(fmt.Errorf("not allowed to have zero paramters for %v", uniqueFullyQualifiedFunctionName))
 	}
@@ -208,7 +212,7 @@ func (c *PackageConstants) AllocateDebugInfoFiles(fileUrls []*FileUrl) (*Constan
 	stringPointers := make([]SourceDynamicMemoryPosRange, len(fileUrls))
 
 	for index, fileUrl := range fileUrls {
-		ptr := c.AllocateStringOctets(fileUrl.File)
+		ptr := AllocateStringOctets(c.dynamicMapper, fileUrl.File)
 		stringPointers[index] = ptr
 	}
 
@@ -248,6 +252,7 @@ func (c *PackageConstants) AllocateDebugInfoLines(instructions []*opcode_sp.Inst
 
 const SwampFuncOpcodeOffset = 24
 const SwampFuncDebugLinesOffset = 72
+const SwampFuncDebugScopesOffset = 88
 
 func (c *PackageConstants) FetchOpcodes(functionConstant *Constant) []byte {
 	readSection := SourceDynamicMemoryPosRange{
@@ -308,6 +313,60 @@ func (c *PackageConstants) DefineFunctionDebugLines(funcConstant *Constant, coun
 	binary.LittleEndian.PutUint64(debugLineOctets[8:16], uint64(debugLinesStructPointer.Size))
 
 	c.dynamicMapper.Overwrite(overwritePointer, debugLineOctets[:], "debugInfoOctets"+funcConstant.str)
+
+	return nil
+}
+
+
+func serializeVariableInfoArray(memoryMapper *DynamicMemoryMapper, variables []opcode_sp.VariableInfo) SourceDynamicMemoryPosRange {
+	var variableInfoEntry [SizeofSwampDebugInfoScopesEntry]byte
+	if len(variables) == 0 {
+		return SourceDynamicMemoryPosRange{
+			SourceDynamicMemoryPosNull,
+			0,
+		}
+	}
+	startOfEntryArray := memoryMapper.Allocate(SizeofSwampDebugInfoScopesEntry * uint(len(variables)), AlignOfSwampDebugInfoScopesEntry, "variableInfos")
+	for i, variable := range variables {
+		nameStringPointer := AllocateStringOctets(memoryMapper, variable.Name)
+		binary.LittleEndian.PutUint16(variableInfoEntry[0:2], uint16(variable.StartOpcodePosition))
+		binary.LittleEndian.PutUint16(variableInfoEntry[2:4], uint16(variable.EndOpcodePosition))
+		binary.LittleEndian.PutUint16(variableInfoEntry[4:6], uint16(variable.TypeID))
+		binary.LittleEndian.PutUint16(variableInfoEntry[6:8], uint16(variable.ScopeID))
+		binary.LittleEndian.PutUint64(variableInfoEntry[8:16], uint64(nameStringPointer.Position))
+		overwritePosition := SourceDynamicMemoryPos(int(startOfEntryArray.Position) + SizeofSwampDebugInfoScopesEntry * i)
+		memoryMapper.Overwrite(overwritePosition, variableInfoEntry[:], "variableInfo entry")
+	}
+
+	return startOfEntryArray
+}
+
+
+func (c *PackageConstants) allocateDebugScopesStruct(variableInfos []opcode_sp.VariableInfo, uniqueFullyQualifiedFunctionName string) SourceDynamicMemoryPosRange {
+	var swampFuncStruct [SizeofSwampDebugInfoScopes]byte
+
+	debugLinesLinesPointer := serializeVariableInfoArray(c.dynamicMapper, variableInfos)
+
+	binary.LittleEndian.PutUint32(swampFuncStruct[0:4], uint32(len(variableInfos)))
+	binary.LittleEndian.PutUint64(swampFuncStruct[8:16], uint64(debugLinesLinesPointer.Position))
+
+	pointerToDebugScopes := c.dynamicMapper.WriteAlign(swampFuncStruct[:], 4, "debug scopes:"+uniqueFullyQualifiedFunctionName)
+
+	return pointerToDebugScopes
+}
+
+
+func (c *PackageConstants) DefineFunctionDebugScopes(funcConstant *Constant, variables []opcode_sp.VariableInfo) error {
+	overwritePointer := SourceDynamicMemoryPos(uint(funcConstant.PosRange().Position) + SwampFuncDebugScopesOffset)
+
+	var debugInfoScopeStructOctets [16]byte
+
+	debugInfoScopesPointerAndSize := c.allocateDebugScopesStruct(variables, funcConstant.FunctionReferenceFullyQualifiedName())
+
+	binary.LittleEndian.PutUint64(debugInfoScopeStructOctets[0:8], uint64(debugInfoScopesPointerAndSize.Position))
+	binary.LittleEndian.PutUint64(debugInfoScopeStructOctets[8:16], uint64(debugInfoScopesPointerAndSize.Size))
+
+	c.dynamicMapper.Overwrite(overwritePointer, debugInfoScopeStructOctets[:], "debugInfoScopesOctets"+funcConstant.str)
 
 	return nil
 }
