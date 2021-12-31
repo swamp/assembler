@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/swamp/opcodes/opcode_sp"
+	"github.com/swamp/opcodes/type"
 )
 
 type ScopeVariables struct {
@@ -44,6 +45,14 @@ func VariableInfosDebugOutput(variables []opcode_sp.VariableInfo ) {
 	}
 }
 
+
+func convertStackPosRange(positionRange SourceStackPosRange) opcode_sp_type.SourceStackPositionRange {
+	return opcode_sp_type.SourceStackPositionRange{
+		Position: opcode_sp_type.SourceStackPosition(positionRange.Pos),
+		Range: opcode_sp_type.SourceStackRange(positionRange.Size),
+	}
+}
+
 func GenerateVariablesWithScope(c *ScopeVariables, scopeID uint) []opcode_sp.VariableInfo {
 	var variableInfos []opcode_sp.VariableInfo
 
@@ -56,6 +65,7 @@ func GenerateVariablesWithScope(c *ScopeVariables, scopeID uint) []opcode_sp.Var
 			EndOpcodePosition:   labelToOpcodePosition(variable.endLabel),
 			ScopeID:             scopeID,
 			TypeID:              uint32(variable.typeID),
+			StackPositionRange: convertStackPosRange(variable.source),
 			Name: variable.identifier.Name(),
 		}
 		variableInfos = append(variableInfos, variableInfo)

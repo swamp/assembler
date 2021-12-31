@@ -124,7 +124,7 @@ const (
 	SizeofSwampDebugInfoLines = 2 * 8
 	SizeofSwampDebugInfoFiles = 2 * 8
 	SizeofSwampDebugInfoScopes = 2 * 8
-	SizeofSwampDebugInfoScopesEntry = 4 * 2 + 8
+	SizeofSwampDebugInfoScopesEntry = 6 * 2 + 4 + 8
 	AlignOfSwampDebugInfoScopesEntry = 8
 )
 
@@ -333,7 +333,9 @@ func serializeVariableInfoArray(memoryMapper *DynamicMemoryMapper, variables []o
 		binary.LittleEndian.PutUint16(variableInfoEntry[2:4], uint16(variable.EndOpcodePosition))
 		binary.LittleEndian.PutUint16(variableInfoEntry[4:6], uint16(variable.TypeID))
 		binary.LittleEndian.PutUint16(variableInfoEntry[6:8], uint16(variable.ScopeID))
-		binary.LittleEndian.PutUint64(variableInfoEntry[8:16], uint64(nameStringPointer.Position))
+		binary.LittleEndian.PutUint16(variableInfoEntry[8:10], uint16(variable.StackPositionRange.Position))
+		binary.LittleEndian.PutUint16(variableInfoEntry[10:12], uint16(variable.StackPositionRange.Range))
+		binary.LittleEndian.PutUint64(variableInfoEntry[16:24], uint64(nameStringPointer.Position))
 		overwritePosition := SourceDynamicMemoryPos(int(startOfEntryArray.Position) + SizeofSwampDebugInfoScopesEntry * i)
 		memoryMapper.Overwrite(overwritePosition, variableInfoEntry[:], "variableInfo entry")
 	}
