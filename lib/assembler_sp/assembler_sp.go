@@ -62,14 +62,14 @@ func (c *Code) Label(identifier VariableName, debugString string) *Label {
 
 func (c *Code) VariableStart(name VariableName, posRange SourceStackPosRange) *VariableImpl {
 	o := &VariableImpl{identifier: name, VariableNode: VariableNode{debugString: ""}}
-//	c.labels = append(c.labels, o)
+	//	c.labels = append(c.labels, o)
 	c.addStatement(o)
 
 	return o
 }
 
 func (c *Code) VariableEnd(refer *VariableImpl) *VariableEnd {
-	o := &VariableEnd{refer:refer}
+	o := &VariableEnd{refer: refer}
 	//	c.labels = append(c.labels, o)
 	c.addStatement(o)
 
@@ -156,8 +156,8 @@ func (c *Code) LoadBool(target TargetStackPos, boolValue bool, position opcode_s
 	c.addStatement(o)
 }
 
-func (c *Code) SetEnum(target TargetStackPos, enumIndex uint8, position opcode_sp.FilePosition) {
-	o := &SetEnum{target: target, enumIndex: enumIndex, position: position}
+func (c *Code) SetEnum(target TargetStackPos, enumIndex uint8, itemSize StackRange, position opcode_sp.FilePosition) {
+	o := &SetEnum{target: target, enumIndex: enumIndex, itemSize: itemSize, position: position}
 	c.addStatement(o)
 }
 
@@ -402,7 +402,7 @@ func writeLoadBool(stream *opcode_sp.Stream, loadBool *LoadBool) {
 }
 
 func writeSetEnum(stream *opcode_sp.Stream, setEnum *SetEnum) {
-	stream.SetEnum(targetStackPosition(setEnum.target), setEnum.enumIndex, setEnum.position)
+	stream.SetEnum(targetStackPosition(setEnum.target), setEnum.enumIndex, stackRange(setEnum.itemSize), setEnum.position)
 }
 
 func writeCreateArray(stream *opcode_sp.Stream, arrayLiteral *ArrayLiteral) {
