@@ -6,14 +6,15 @@ import (
 	"strings"
 
 	"github.com/swamp/opcodes/opcode_sp"
-	"github.com/swamp/opcodes/type"
+	opcode_sp_type "github.com/swamp/opcodes/type"
 )
 
 type ScopeVariables struct {
 	parent         *ScopeVariables
 	nameToVariable map[string]*VariableImpl
-	childScopes []*ScopeVariables
-	debugString string
+	allVariables   []*VariableImpl
+	childScopes    []*ScopeVariables
+	debugString    string
 }
 
 func NewFunctionVariables(debugString string) *ScopeVariables {
@@ -28,35 +29,35 @@ func NewFunctionVariablesWithParent(parent *ScopeVariables, debugString string) 
 	return newScope
 }
 
-func labelToOpcodePosition(label* Label) opcode_sp.OpcodePosition {
+func labelToOpcodePosition(label *Label) opcode_sp.OpcodePosition {
 	if label == nil {
 		panic("how is this possible")
 	}
+
 	if label.OpLabel() == nil {
 		panic(fmt.Errorf("label is not defined %v", label))
 	}
 	return opcode_sp.OpcodePosition(label.OpLabel().DefinedProgramCounter().Value())
 }
 
-func VariableInfosDebugOutput(variables []opcode_sp.VariableInfo ) {
+func VariableInfosDebugOutput(variables []opcode_sp.VariableInfo) {
 	log.Printf("count: %d", len(variables))
 	for _, variable := range variables {
 		log.Printf("variable:%v", variable)
 	}
 }
 
-
 func convertStackPosRange(positionRange SourceStackPosRange) opcode_sp_type.SourceStackPositionRange {
 	return opcode_sp_type.SourceStackPositionRange{
 		Position: opcode_sp_type.SourceStackPosition(positionRange.Pos),
-		Range: opcode_sp_type.SourceStackRange(positionRange.Size),
+		Range:    opcode_sp_type.SourceStackRange(positionRange.Size),
 	}
 }
 
 func GenerateVariablesWithScope(c *ScopeVariables, scopeID uint) []opcode_sp.VariableInfo {
 	var variableInfos []opcode_sp.VariableInfo
 
-	for _, variable := range c.nameToVariable {
+	for _, variable := range c.allVariables {
 		if !variable.EndIsDefined() {
 			panic(fmt.Errorf("variable is not end defined %v", variable))
 		}
@@ -65,8 +66,8 @@ func GenerateVariablesWithScope(c *ScopeVariables, scopeID uint) []opcode_sp.Var
 			EndOpcodePosition:   labelToOpcodePosition(variable.endLabel),
 			ScopeID:             scopeID,
 			TypeID:              uint32(variable.typeID),
-			StackPositionRange: convertStackPosRange(variable.source),
-			Name: variable.identifier.Name(),
+			StackPositionRange:  convertStackPosRange(variable.source),
+			Name:                variable.identifier.Name(),
 		}
 		variableInfos = append(variableInfos, variableInfo)
 	}
@@ -84,21 +85,20 @@ func (c *ScopeVariables) addChildScope(child *ScopeVariables) {
 	c.childScopes = append(c.childScopes, child)
 }
 
-
 func indent(indentCount uint) string {
 	return strings.Repeat("..", int(indentCount))
 }
 
 func (c *ScopeVariables) DebugOutput(indentCount uint) {
-	for _, variable := range c.nameToVariable {
-
-		log.Printf("%v%v %v = %v // %v", indent(indentCount), variable.identifier, variable.typeString, variable.source, variable.debugString)
+	for _, variable := range c.allVariables {
+		log.Printf("%v%v %v = %v // %v", indent(indentCount), variable.identifier,
+			variable.typeString, variable.source, variable.debugString)
 	}
 
 	for _, scope := range c.childScopes {
 		if len(scope.nameToVariable) > 0 {
-			log.Printf("%v %v (child scope)",  indent(indentCount), scope.debugString)
-			scope.DebugOutput(indentCount+1)
+			log.Printf("%v %v (child scope)", indent(indentCount), scope.debugString)
+			scope.DebugOutput(indentCount + 1)
 		}
 	}
 }
@@ -109,6 +109,7 @@ func (c *ScopeVariables) DefineVariable(name VariableName, posRange SourceStackP
 	}
 
 	stringName := string(name)
+
 	_, alreadyHas := c.nameToVariable[stringName]
 	if alreadyHas {
 		return nil, fmt.Errorf("cannot define variable again '%s'", name)
@@ -117,15 +118,16 @@ func (c *ScopeVariables) DefineVariable(name VariableName, posRange SourceStackP
 	v := NewVariable(name, posRange, typeID, typeString, label)
 
 	c.nameToVariable[stringName] = v
+	c.allVariables = append(c.allVariables, v)
 
 	return v, nil
 }
 
-func (c *ScopeVariables) StopScope(label* Label) error {
+func (c *ScopeVariables) StopScope(label *Label) error {
 	//name := variable.identifier.String()
 	//delete(c.nameToVariable, name)
 
-	for _, variable := range c.nameToVariable {
+	for _, variable := range c.allVariables {
 		variable.EndLabel(label)
 	}
 
