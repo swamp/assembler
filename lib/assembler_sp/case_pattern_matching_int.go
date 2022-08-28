@@ -7,11 +7,12 @@ package assembler_sp
 
 import (
 	"fmt"
+
 	"github.com/swamp/opcodes/opcode_sp"
 )
 
 type CaseConsequencePatternMatchingInt struct {
-	position opcode_sp.FilePosition
+	position        opcode_sp.FilePosition
 	constantInteger int32
 	label           *Label
 }
@@ -29,11 +30,11 @@ func (c *CaseConsequencePatternMatchingInt) ConstantInteger() int32 {
 }
 
 func (c *CaseConsequencePatternMatchingInt) String() string {
-	return fmt.Sprintf("[caseconpmi %v (%d)]", c.constantInteger, c.label)
+	return fmt.Sprintf("[caseconpmi %v (%v)]", c.constantInteger, c.label)
 }
 
 type CasePatternMatchingInt struct {
-	position opcode_sp.FilePosition
+	position           opcode_sp.FilePosition
 	test               SourceStackPos
 	consequences       []*CaseConsequencePatternMatchingInt
 	defaultConsequence *Label
