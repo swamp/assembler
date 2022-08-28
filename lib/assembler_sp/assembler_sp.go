@@ -531,7 +531,7 @@ func (c *Code) Resolve(verboseFlag bool) ([]byte, []opcode_sp.OpcodeInfo, error)
 	if verboseFlag {
 		fmt.Println("--- disassembly ---")
 
-		stringLines := swampdisasmsp.Disassemble(octets)
+		stringLines := swampdisasmsp.Disassemble(octets, verboseFlag)
 		for _, line := range stringLines {
 			fmt.Printf("%s\n", line)
 		}

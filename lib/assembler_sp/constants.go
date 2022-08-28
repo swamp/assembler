@@ -37,6 +37,23 @@ func (c *PackageConstants) String() string {
 	return strings.TrimSpace(s)
 }
 
+func (c *PackageConstants) DebugString(filterTypes []ConstantType) string {
+	s := "\n"
+	for _, constant := range c.constants {
+		if constant == nil {
+			panic("swamp assembler: nil constant")
+		}
+		for _, filterTypeToInclude := range filterTypes {
+			if constant.constantType == filterTypeToInclude {
+				s += fmt.Sprintf("%v\n", constant)
+				break;
+			}
+		}
+
+	}
+	return strings.TrimSpace(s)
+}
+
 func (c *PackageConstants) Constants() []*Constant {
 	return c.constants
 }
